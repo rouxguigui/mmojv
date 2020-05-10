@@ -16,15 +16,53 @@
 <!--                <template v-for="v in videos">-->
 <!--                    <video :ref="'video-' + v.value" v-if="video === v.value" :key="v.value" :src="require('../assets/videos/' + v.value +'.webm')" muted></video>-->
 <!--                </template>-->
-                <video ref="video" v-if="video" :src="require('../assets/videos/' + video +'.webm')" muted></video>
+                <video ref="video" v-if="video" :src="require('../assets/videos/' + video +'.webm')" :poster="require('../assets/img/background.jpg')" muted></video>
             </div>
         </main-page>
-        <div class="menu" v-show="video">
-            <b-radio-group buttons v-model="video" :options="videos"></b-radio-group>
+        <div class="menu" v-show="video" :class="{ 'reduced': !showMenu }">
+            <b-btn @click="showMenu = !showMenu" class="float-left mr-2 mt-2">
+                <i v-if="showMenu" class="fas fa-caret-down"></i>
+                <i v-else class="fas fa-caret-up"></i>
+            </b-btn>
+            <div v-show="showMenu">
+                <b-dropdown v-if="!isLargeLayout && currentVideo" dropup>
+                    <template #button-content>
+                        {{currentVideo.text}}
+                    </template>
+                    <b-radio-group buttons v-model="video" stacked :options="videos"></b-radio-group>
+                </b-dropdown>
+                <b-radio-group v-else buttons v-model="video" :options="videos"></b-radio-group>
 
-            <audio class="mx-3" ref="audio" :src="require('../assets/audio/audio.mp3')" controls></audio>
+                <b-select class="ml-2" v-b-tooltip v-model.number="latency" title="Décalage audio / vidéo (ajustez pour mieux synchroniser)">
+                    <option :value="0.01">10ms</option>
+                    <option :value="0.02">20ms</option>
+                    <option :value="0.05">50ms</option>
+                    <option :value="0.08">80ms</option>
+                    <option :value="0.1">100ms</option>
+                    <option :value="0.15">150ms</option>
+                    <option :value="0.2">200ms</option>
+                    <option :value="0.25">250ms</option>
+                    <option :value="0.3">300ms</option>
+                    <option :value="0.35">350ms</option>
+                    <option :value="0.4">400ms</option>
+                    <option :value="0.45">450ms</option>
+                    <option :value="0.5">500ms</option>
+                    <option :value="0.55">550ms</option>
+                    <option :value="0.6">600ms</option>
+                    <option :value="0.65">650ms</option>
+                    <option :value="0.7">700ms</option>
+                    <option :value="0.75">750ms</option>
+                    <option :value="0.8">800ms</option>
+                    <option :value="0.85">850ms</option>
+                    <option :value="0.9">900ms</option>
+                    <option :value="0.95">950ms</option>
+                    <option :value="1">1s</option>
+                </b-select>
 
-            <b-btn class="float-right mt-2" @click="toggleFullscreen"><i class="fas fa-expand-wide"></i></b-btn>
+                <audio class="ml-2" ref="audio" :src="require('../assets/audio/audio.mp3')" controls></audio>
+
+                <b-btn v-if="!isMobileLayout" class="float-right mt-2" @click="toggleFullscreen"><i class="fas fa-expand-wide"></i></b-btn>
+            </div>
         </div>
     </div>
 </template>
@@ -40,6 +78,8 @@
                 time: 0,
                 video: null,
                 playing: false,
+                showMenu: true,
+                latency: 0.1,
                 videos: [
                     { text: 'Clarinettes', value: 'clarinettes' },
                     { text: 'Cors & Tubas', value: 'cors' },
@@ -48,27 +88,32 @@
                     { text: 'Sax', value: 'sax' },
                     { text: 'Solistes', value: 'solistes' },
                     { text: 'Trombones', value: 'trombones' },
-                    { text: 'Trompettes', value: 'trompettes' },
+                    { text: 'Trompettes & Euphos', value: 'trompettes' },
                     { text: 'Cellos & Basse', value: 'violoncelles' }
                 ]
             }
         },
         computed: {
-            videoName() {
-                return 'video';
+            isMobileLayout() {
+                return window.innerWidth < 640;
             },
-            videoElement() {
-                if (this.video && this.$refs[this.videoName]) {
-                    return this.$refs[this.videoName][0];
-                } else {
-                    return null;
-                }
+            isLargeLayout() {
+                return window.innerWidth > 1368;
+            },
+            currentVideo() {
+                return this.videos.find(v => {
+                    return v.value === this.video;
+                });
             }
         },
         mounted() {
-            setInterval(() => this.sync(), 1500);
+            setInterval(() => this.sync(), 2000);
             this.$refs.audio.onplay = () => this.onPlay();
             this.$refs.audio.onpause = () => this.onPause();
+
+            if (localStorage.getItem('latency')) {
+                this.latency = parseFloat(localStorage.getItem('latency'));
+            }
         },
         methods: {
             toggleFullscreen() {
@@ -86,12 +131,20 @@
                 if (!this.$refs.video || !this.$refs.audio) {
                     return;
                 }
-                this.$refs.video.currentTime = this.$refs.audio.currentTime;
+                if (Math.abs(this.$refs.video.currentTime - this.$refs.audio.currentTime) > 0.3) {
+                    this.applySync();
+                }
                 if (this.playing && this.$refs.video.paused) {
                     this.$refs.video.play();
                 } else if (!this.playing && !this.$refs.video.paused) {
                     this.$refs.video.pause();
                 }
+            },
+            applySync() {
+                if (!this.$refs.video || !this.$refs.audio) {
+                    return;
+                }
+                this.$refs.video.currentTime = Math.min(this.$refs.audio.currentTime + this.latency, this.$refs.video.duration);
             },
             onPlay() {
                 this.playing = true;
@@ -113,95 +166,15 @@
         watch: {
             video() {
                 this.sync();
+            },
+            latency() {
+                this.applySync();
+                localStorage.setItem('latency', this.latency);
             }
         }
     }
 </script>
 
 <style lang="scss">
-     #home {
-         width: 100%;
-         height: 100%;
-         overflow: hidden;
-         background: black;
-         padding: 20px;
 
-         #select-character {
-             margin: 0 auto;
-             border: 3px solid #444;
-             padding: 20px;
-             max-width: 1024px;
-             text-align: center;
-             max-height: calc(100vh - 40px);
-             overflow-y: auto;
-
-             .logo {
-                 max-width: 200px;
-                 margin-bottom: 20px;
-             }
-
-             .character {
-                 display: inline-block;
-                 margin: 10px auto;
-                 width: 200px;
-                 cursor: pointer;
-
-                 outline: 3px solid transparent !important;
-                 transition: transform 150ms, outline 150ms;
-
-                 img {
-                     margin: 10px auto;
-                     width: 100px;
-                     display: block;
-                 }
-
-                 .name {
-                     display: block;
-                     font-weight: 500;
-                 }
-
-                 &:hover {
-                     transform: scale(1.1);
-                     outline: 3px solid #777 !important;
-                 }
-             }
-         }
-
-         .menu {
-             position: fixed;
-             bottom: 0;
-             left: 0;
-             right: 0;
-             min-height: 70px;
-             padding: 10px;
-             text-align: center;
-             z-index: 1;
-             flex: 1;
-             background: rgba(4, 8, 13, 0.4);
-
-             audio {
-                 vertical-align: middle;
-                 width: 500px;
-             }
-
-             .btn-group {
-                 .btn {
-                     &.active {
-                         color: #000 !important;
-                         background-color: white !important;
-                     }
-                 }
-             }
-         }
-
-         video {
-             width: 100%;
-             max-width: 100%;
-             object-fit: contain;
-         }
-
-         .player {
-             background: black url('../assets/img/background.jpg') no-repeat center;
-         }
-     }
 </style>

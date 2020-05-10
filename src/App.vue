@@ -31,7 +31,7 @@ export default {
 
   body {
     overflow-y: auto;
-    background: #111 url('assets/img/background.jpg') no-repeat center center fixed;
+    background: #000 no-repeat center center fixed;
     color: white;
     font-family: $theme-font;
   }
