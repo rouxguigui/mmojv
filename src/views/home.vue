@@ -1,11 +1,25 @@
 <template>
     <div id="home">
         <main-page>
-            <template v-for="v in videos">
-                <video preload="metadata" :ref="'video-' + v.value" v-show="video === v.value" :key="v.value" :src="require('../assets/videos/' + v.value +'.webm')" muted></video>
-            </template>
+            <div id="select-character" v-if="!video">
+                <div class="logo-container text-center">
+                    <b-img class="logo" :src="require('../assets/logo.png')"></b-img>
+
+                    <h4 class="my-3 text-uppercase font-weight-light" style="letter-spacing: 2px">Choisissez votre section</h4>
+                </div>
+                <div class="character" v-for="v in videos" :key="'select-' + v.value" @click="selectVideo(v.value)">
+                    <b-img :src="require('../assets/img/' + v.value + '.png')"></b-img>
+                    <div class="name">{{v.text}}</div>
+                </div>
+            </div>
+            <div id="player" v-if="video">
+<!--                <template v-for="v in videos">-->
+<!--                    <video :ref="'video-' + v.value" v-if="video === v.value" :key="v.value" :src="require('../assets/videos/' + v.value +'.webm')" muted></video>-->
+<!--                </template>-->
+                <video ref="video" v-if="video" :src="require('../assets/videos/' + video +'.webm')" muted></video>
+            </div>
         </main-page>
-        <div class="menu">
+        <div class="menu" v-show="video">
             <b-radio-group buttons v-model="video" :options="videos"></b-radio-group>
 
             <audio class="mx-3" ref="audio" :src="require('../assets/audio/audio.mp3')" controls></audio>
@@ -24,27 +38,31 @@
         data() {
             return {
                 time: 0,
-                video: 'percussions',
+                video: null,
                 playing: false,
                 videos: [
                     { text: 'Clarinettes', value: 'clarinettes' },
-                    { text: 'Cors', value: 'cors' },
+                    { text: 'Cors & Tubas', value: 'cors' },
                     { text: 'Flutes', value: 'flutes' },
                     { text: 'Percussions', value: 'percussions' },
                     { text: 'Sax', value: 'sax' },
                     { text: 'Solistes', value: 'solistes' },
                     { text: 'Trombones', value: 'trombones' },
                     { text: 'Trompettes', value: 'trompettes' },
-                    { text: 'Violoncelles', value: 'violoncelles' }
+                    { text: 'Cellos & Basse', value: 'violoncelles' }
                 ]
             }
         },
         computed: {
             videoName() {
-                return 'video-' + this.video;
+                return 'video';
             },
             videoElement() {
-                return this.$refs[this.videoName][0];
+                if (this.video && this.$refs[this.videoName]) {
+                    return this.$refs[this.videoName][0];
+                } else {
+                    return null;
+                }
             }
         },
         mounted() {
@@ -65,22 +83,31 @@
                 }
             },
             sync() {
-                this.videoElement.currentTime = this.$refs.audio.currentTime;
-                if (this.playing && this.videoElement.paused) {
-                    this.videoElement.play();
-                } else if (!this.playing && !this.videoElement.paused) {
-                    this.videoElement.pause();
+                if (!this.$refs.video || !this.$refs.audio) {
+                    return;
+                }
+                this.$refs.video.currentTime = this.$refs.audio.currentTime;
+                if (this.playing && this.$refs.video.paused) {
+                    this.$refs.video.play();
+                } else if (!this.playing && !this.$refs.video.paused) {
+                    this.$refs.video.pause();
                 }
             },
             onPlay() {
                 this.playing = true;
-                this.videoElement.play();
                 this.$refs.audio.play();
+                this.$refs.video.play();
             },
             onPause() {
                 this.playing = false;
-                this.videoElement.pause();
                 this.$refs.audio.pause();
+                this.$refs.video.pause();
+            },
+            selectVideo(video) {
+                this.video = video;
+                setTimeout(() => {
+                    this.$refs.audio.play();
+                }, 100);
             }
         },
         watch: {
@@ -96,14 +123,56 @@
          width: 100%;
          height: 100%;
          overflow: hidden;
-         background: black url('../assets/img/background.jpg') no-repeat center;
+         background: black;
+         padding: 20px;
+
+         #select-character {
+             margin: 0 auto;
+             border: 3px solid #444;
+             padding: 20px;
+             max-width: 1024px;
+             text-align: center;
+             max-height: calc(100vh - 40px);
+             overflow-y: auto;
+
+             .logo {
+                 max-width: 200px;
+                 margin-bottom: 20px;
+             }
+
+             .character {
+                 display: inline-block;
+                 margin: 10px auto;
+                 width: 200px;
+                 cursor: pointer;
+
+                 outline: 3px solid transparent !important;
+                 transition: transform 150ms, outline 150ms;
+
+                 img {
+                     margin: 10px auto;
+                     width: 100px;
+                     display: block;
+                 }
+
+                 .name {
+                     display: block;
+                     font-weight: 500;
+                 }
+
+                 &:hover {
+                     transform: scale(1.1);
+                     outline: 3px solid #777 !important;
+                 }
+             }
+         }
 
          .menu {
              position: fixed;
              bottom: 0;
              left: 0;
              right: 0;
-             height: 70px;
+             min-height: 70px;
              padding: 10px;
              text-align: center;
              z-index: 1;
@@ -129,6 +198,10 @@
              width: 100%;
              max-width: 100%;
              object-fit: contain;
+         }
+
+         .player {
+             background: black url('../assets/img/background.jpg') no-repeat center;
          }
      }
 </style>

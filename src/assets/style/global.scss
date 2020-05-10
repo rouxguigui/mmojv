@@ -1,0 +1,11 @@
+@import "bootstrap-theme";
+@import '~bootstrap/scss/bootstrap';
+@import '~bootstrap-vue/dist/bootstrap-vue.css';
+
+@import "chrome.scss";
+
+.disabled,
+[disabled] {
+    pointer-events: none !important;
+    opacity: 0.5 !important;
+}
