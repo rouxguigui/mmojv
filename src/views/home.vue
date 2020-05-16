@@ -1,3 +1,4 @@
+import {page} from "vue-analytics";
 <template>
     <div id="home">
         <main-page>
@@ -5,17 +6,30 @@
                 <div class="logo-container text-center">
                     <b-img class="logo" :src="require('../assets/logo.png')"></b-img>
 
-                    <h4 class="my-3 text-uppercase font-weight-light" style="letter-spacing: 2px">Choisissez votre section</h4>
+                    <h4 class="my-2 text-uppercase font-weight-light text-accent" style="letter-spacing: 2px">Choisissez votre section</h4>
+                    <p style="opacity: 0.8">Vous pourrez changer de section pendant la vidéo</p>
                 </div>
-                <div class="character" v-for="v in videos" :key="'select-' + v.value" @click="selectVideo(v.value)">
-                    <b-img :src="require('../assets/img/' + v.value + '.png')"></b-img>
-                    <div class="name">{{v.text}}</div>
+                <div class="characters">
+                    <div class="character" v-for="v in videos" :key="'select-' + v.value" @click="selectVideo(v.value)">
+                        <b-img :src="require('../assets/img/' + v.value + '.png')"></b-img>
+                        <div class="name">{{v.text}}</div>
+                    </div>
+                </div>
+                <p class="mt-4">Vous pouvez aussi voir le montage complet sur
+                    <a class="text-accent" href="https://www.youtube.com/watch?v=0wuahEgZnSw&feature=youtu.be">YouTube</a>
+                </p>
+                <p>
+                    <span style="opacity: 0.8">Une expérience de l'Orchestre de Jeux Vidéo</span>
+                </p>
+                <a class="text-accent ml-2" target="_blank" href="https://www.orchestre-ojv.ca">https://www.orchestre-ojv.ca/</a>
+                <br>
+                <div class="mt-2">
+                    <a class="ml-3" target="_blank" href="https://www.facebook.com/orchestre.ojv"><i class="fab fa-lg fa-facebook"></i></a>
+                    <a class="ml-3" target="_blank" href="https://www.youtube.com/channel/UCf5e9hPIxFhcfOjIHHsOyeA"><i class="fab fa-lg fa-youtube"></i></a>
+                    <a class="ml-3" target="_blank" href="https://www.instagram.com/orchestre.ojv"><i class="fab fa-lg fa-instagram"></i></a>
                 </div>
             </div>
             <div id="player" v-if="video">
-<!--                <template v-for="v in videos">-->
-<!--                    <video :ref="'video-' + v.value" v-if="video === v.value" :key="v.value" :src="require('../assets/videos/' + v.value +'.webm')" muted></video>-->
-<!--                </template>-->
                 <video ref="video" v-if="video" :src="require('../assets/videos/' + video +'.webm')" :poster="require('../assets/img/background.jpg')" muted></video>
             </div>
         </main-page>
@@ -69,6 +83,7 @@
 
 <script>
     import MainPage from "../components/main-page";
+    import { page } from 'vue-analytics'
 
     export default {
         name: "home",
@@ -81,6 +96,7 @@
                 showMenu: true,
                 latency: 0.1,
                 videos: [
+                    { text: 'Orchestre', value: 'orchestre' },
                     { text: 'Clarinettes', value: 'clarinettes' },
                     { text: 'Cors & Tubas', value: 'cors' },
                     { text: 'Flutes', value: 'flutes' },
@@ -88,7 +104,7 @@
                     { text: 'Sax', value: 'sax' },
                     { text: 'Solistes', value: 'solistes' },
                     { text: 'Trombones', value: 'trombones' },
-                    { text: 'Trompettes & Euphos', value: 'trompettes' },
+                    { text: 'Trompettes', value: 'trompettes' },
                     { text: 'Cellos & Basse', value: 'violoncelles' }
                 ]
             }
@@ -107,6 +123,7 @@
             }
         },
         mounted() {
+            page('/');
             setInterval(() => this.sync(), 2000);
             this.$refs.audio.onplay = () => this.onPlay();
             this.$refs.audio.onpause = () => this.onPause();
@@ -166,6 +183,7 @@
         watch: {
             video() {
                 this.sync();
+                page('/' + this.video);
             },
             latency() {
                 this.applySync();
@@ -176,5 +194,4 @@
 </script>
 
 <style lang="scss">
-
 </style>
