@@ -24,9 +24,13 @@ import {page} from "vue-analytics";
                 <a class="text-accent ml-2" target="_blank" href="https://www.orchestre-ojv.ca">https://www.orchestre-ojv.ca/</a>
                 <br>
                 <div class="mt-2">
-                    <a class="ml-3" target="_blank" href="https://www.facebook.com/orchestre.ojv"><i class="fab fa-lg fa-facebook"></i></a>
-                    <a class="ml-3" target="_blank" href="https://www.youtube.com/channel/UCf5e9hPIxFhcfOjIHHsOyeA"><i class="fab fa-lg fa-youtube"></i></a>
-                    <a class="ml-3" target="_blank" href="https://www.instagram.com/orchestre.ojv"><i class="fab fa-lg fa-instagram"></i></a>
+                    <a class="ml-3" title="Suivez-nous sur Facebook" v-b-tooltip target="_blank" href="https://www.facebook.com/orchestre.ojv"><i class="fab fa-lg fa-facebook"></i></a>
+                    <a class="ml-3" title="Visitez notre chaîne YouTube" v-b-tooltip target="_blank" href="https://www.youtube.com/channel/UCf5e9hPIxFhcfOjIHHsOyeA"><i class="fab fa-lg fa-youtube"></i></a>
+                    <a class="ml-3" title="Suivez-nous sur Instagram" v-b-tooltip target="_blank" href="https://www.instagram.com/orchestre.ojv"><i class="fab fa-lg fa-instagram"></i></a>
+                </div>
+
+                <div class="mt-5" style="opacity: 0.4; font-size: 10pt;">
+                    Icon made by Freepik from <a href="www.flaticon.com" target="_blank">www.flaticon.com</a>
                 </div>
             </div>
             <div id="player" v-if="video">
@@ -39,6 +43,8 @@ import {page} from "vue-analytics";
                 <i v-else class="fas fa-caret-up"></i>
             </b-btn>
             <div v-show="showMenu">
+                <b-btn class="mr-2" @click="stopVideo"><i class="fas fa-home"></i></b-btn>
+
                 <b-dropdown v-if="!isLargeLayout && currentVideo" dropup>
                     <template #button-content>
                         {{currentVideo.text}}
@@ -99,9 +105,9 @@ import {page} from "vue-analytics";
                     { text: 'Orchestre', value: 'orchestre' },
                     { text: 'Clarinettes', value: 'clarinettes' },
                     { text: 'Cors & Tubas', value: 'cors' },
-                    { text: 'Flutes', value: 'flutes' },
+                    { text: 'Flûtes', value: 'flutes' },
                     { text: 'Percussions', value: 'percussions' },
-                    { text: 'Sax', value: 'sax' },
+                    { text: 'Saxophones', value: 'sax' },
                     { text: 'Solistes', value: 'solistes' },
                     { text: 'Trombones', value: 'trombones' },
                     { text: 'Trompettes', value: 'trompettes' },
@@ -178,12 +184,20 @@ import {page} from "vue-analytics";
                 setTimeout(() => {
                     this.$refs.audio.play();
                 }, 100);
+            },
+            stopVideo() {
+                this.video = null;
+                this.$refs.audio.pause();
             }
         },
         watch: {
             video() {
                 this.sync();
-                page('/' + this.video);
+                if (this.video) {
+                    page('/' + this.video);
+                } else {
+                    page('/');
+                }
             },
             latency() {
                 this.applySync();
