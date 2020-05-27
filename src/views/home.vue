@@ -1,4 +1,3 @@
-import {page} from "vue-analytics";
 <template>
     <div id="home">
         <main-page>
@@ -134,6 +133,7 @@ import {page} from "vue-analytics";
             this.$refs.audio.onplay = () => this.onPlay();
             this.$refs.audio.onpause = () => this.onPause();
 
+            // Load previous latency
             if (localStorage.getItem('latency')) {
                 this.latency = parseFloat(localStorage.getItem('latency'));
             }
@@ -154,9 +154,12 @@ import {page} from "vue-analytics";
                 if (!this.$refs.video || !this.$refs.audio) {
                     return;
                 }
-                if (Math.abs(this.$refs.video.currentTime - this.$refs.audio.currentTime) > 0.3) {
+                // Only sync video when necessary to avoid video loading freeze
+                if (Math.abs(this.$refs.video.currentTime - this.$refs.audio.currentTime) > 0.2) {
                     this.applySync();
                 }
+
+                // Start or stop video if required
                 if (this.playing && this.$refs.video.paused) {
                     this.$refs.video.play();
                 } else if (!this.playing && !this.$refs.video.paused) {
@@ -167,6 +170,7 @@ import {page} from "vue-analytics";
                 if (!this.$refs.video || !this.$refs.audio) {
                     return;
                 }
+                // Load video with a future frame based on the latency to keep in sync with the audio
                 this.$refs.video.currentTime = Math.min(this.$refs.audio.currentTime + this.latency, this.$refs.video.duration);
             },
             onPlay() {
@@ -193,6 +197,8 @@ import {page} from "vue-analytics";
         watch: {
             video() {
                 this.sync();
+
+                // Google Analytics
                 if (this.video) {
                     page('/' + this.video);
                 } else {

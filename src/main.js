@@ -14,7 +14,7 @@ Vue.use(BootstrapVue);
 
 Vue.use(VueAnalytics, {
   id() {
-    return `UA-166891781-1`;
+    return [`UA-166891781-1`, `UA-66189317-2`];
   }
 });
 
